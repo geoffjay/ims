@@ -1,0 +1,7 @@
+option('enable-systemd', type: 'boolean', value: false,
+  description: 'setup systemd service'
+)
+
+option('enable-tests', type: 'boolean', value: true,
+  description: 'Whether to compile unit tests'
+)

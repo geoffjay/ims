@@ -1,0 +1,9 @@
+[Unit]
+Description=Image Manipulation Service
+AssertPathExists=@sysconfdir@
+
+[Service]
+ExecStart=@bindir@/ims --config @sysconfdir@/ims.conf
+
+[Install]
+WantedBy=default.target
