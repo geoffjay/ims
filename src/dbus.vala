@@ -5,7 +5,7 @@ public class Ims.DBus : GLib.Object {
     private Ims.PluginManager plugin_manager;
 
     construct {
-        app = Ims.App.get_instance ();
+        app = Ims.App.get_default ();
         plugin_manager = app.get_plugin_manager ();
     }
 
@@ -18,6 +18,10 @@ public class Ims.DBus : GLib.Object {
      * @returns
      */
 
+    public void quit () {
+        app.shutdown ();
+    }
+
     /* Plugin related methods */
 
     public string[] get_loaded_plugins () {
@@ -29,10 +33,20 @@ public class Ims.DBus : GLib.Object {
     }
 
     public void enable_plugin (string plugin) {
-        plugin_manager.enable_plugin (plugin);
+        try {
+            plugin_manager.enable_plugin (plugin);
+        } catch (Error e) {
+            warning (e.message);
+            // TODO: throw new plugin error
+        }
     }
 
     public void disable_plugin (string plugin) {
-        plugin_manager.disable_plugin (plugin);
+        try {
+            plugin_manager.disable_plugin (plugin);
+        } catch (Error e) {
+            warning (e.message);
+            // TODO: throw new plugin error
+        }
     }
 }

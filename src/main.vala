@@ -9,6 +9,14 @@ public class Ims.Main : GLib.Object {
     };
 
     private Main () {
+        var bus_name = "org.halfbaked.Ims";
+        Bus.own_name (BusType.SESSION,
+                      bus_name,
+                      BusNameOwnerFlags.NONE,
+                      bus_acquired_cb,
+                      () => { debug ("Bus %s acquired", bus_name); },
+                      () => { critical ("Could not acquire %s", bus_name); });
+
         if (filename != null) {
             var config = Ims.Config.get_default ();
             try {
@@ -19,8 +27,18 @@ public class Ims.Main : GLib.Object {
         }
     }
 
+    private void bus_acquired_cb (DBusConnection connection) {
+        try {
+            var dbus = new Ims.DBus ();
+            connection.register_object ("/org/halfbaked/ims", dbus);
+        } catch (IOError e) {
+            critical ("Could not register service: %s", e.message);
+        }
+    }
+
     private int run () {
         var app = Ims.App.get_default ();
+        //app.notify["running"].connect (() => { debug ("Shutdown requested"); });
         return app.run ();
     }
 

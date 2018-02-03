@@ -7,17 +7,23 @@ public class Ims.App : GLib.Object {
     private Ims.Router router;
     private Ims.Pipeline pipeline;
     private Ims.PluginManager plugin_manager;
+    private bool running = false;
 
     public static unowned Ims.App get_default () {
         return _instance.once (() => { return new Ims.App (); });
     }
 
     public int run () {
-        var config = Ims.Config.get_default ();
+        //var config = Ims.Config.get_default ();
         string[] _args;
 
+        var settings = new GLib.Settings ("org.halfbaked.Ims");
+
         try {
-            var bind = "%s:%d".printf (config.get_address (), config.get_port ());
+            //var bind = "%s:%d".printf (config.get_address (), config.get_port ());
+            var host = settings.get_string ("host");
+            var port = settings.get_int ("port");
+            var bind = "%s:%d".printf (host, port);
             _args = { "ims", "--address", bind };
         } catch (GLib.Error e) {
             error (e.message);
@@ -33,9 +39,18 @@ public class Ims.App : GLib.Object {
         var image_router = new ImageRouter ();
         router.add_router (image_router, "images", "/api/images");
 
-        server = VSGI.Server.@new ("http", handler: router);
+        running = true;
 
+        server = VSGI.Server.@new ("http", handler: router);
         return server.run (_args);
+    }
+
+    /**
+     * FIXME: this doesn't actually work, not sure why yet
+     */
+    public void shutdown () {
+        server.stop ();
+        running = false;
     }
 
     public Ims.Router get_router () {

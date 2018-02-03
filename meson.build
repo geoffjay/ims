@@ -13,6 +13,8 @@ MAJOR_VERSION = version_split[0]
 MINOR_VERSION = version_split[1]
 MICRO_VERSION = version_split[2]
 
+api_version = '1.0'
+
 status = [
   '', '',
   'Image Manipulation Service @0@'.format(meson.project_version()),
@@ -51,8 +53,8 @@ dep_json = dependency('json-glib-1.0')
 dep_peas = dependency('libpeas-1.0')
 dep_soup = dependency('libsoup-2.4')
 dep_xml = dependency('libxml-2.0')
-dep_valum = dependency('valum-0.3', version: '>= 0.3.13')
-dep_vsgi = dependency('vsgi-0.3', version: '>= 0.3.13')
+dep_valum = dependency('valum-0.4', version: '>= 0.4.0')
+dep_vsgi = dependency('vsgi-0.4', version: '>= 0.4.0')
 
 dep_posix = meson.get_compiler('vala').find_library('posix')
 
@@ -115,6 +117,7 @@ extra_includes = [
 gnome = import('gnome')
 
 subdir('src')
+subdir('plugins')
 subdir('data')
 subdir('doc')
 subdir('tests')

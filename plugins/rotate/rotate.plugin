@@ -1,0 +1,7 @@
+[Plugin]
+Module=rotate
+Loader=python3
+Name=Image Rotate Plugin
+Description=Image rotate plugin.
+Authors=Geoff Johnson <geoff.jay@gmail.com>
+Copyright=Copyright © 2018 Geoff Johnson

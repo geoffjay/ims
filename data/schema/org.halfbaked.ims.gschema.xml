@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<schemalist>
+  <schema path="/org/halfbaked/ims/" id="org.halfbaked.Ims">
+    <!-- Key snippet -->
+    <!--
+    <key name='' type=''>
+      <default></default>
+      <summary></summary>
+      <description></description>
+    </key>
+    -->
+
+    <!-- Application -->
+    <key name="enabled-plugins" type="as">
+      <default>[]</default>
+      <summary>Enabled plugins</summary>
+      <description>
+        Plugins that should be enabled in the system at load.
+      </description>
+    </key>
+
+    <!-- REST service -->
+    <key name="host" type="s">
+      <default>'127.0.0.1'</default>
+      <summary>Host address for the REST service</summary>
+      <description>
+        The hostname or IP address to use for the REST service.
+      </description>
+    </key>
+    <key name="port" type="i">
+      <range min="1024" max="65535" />
+      <default>3003</default>
+      <summary>Host port for the REST service</summary>
+      <description>
+        The host port number to use for the REST service.
+      </description>
+    </key>
+
+    <!-- Database -->
+    <!--
+      TODO: implement these
+      XXX: not all of these are always required depending on provider
+      - host (s), '127.0.0.1'
+      - port (i), 3306
+      - name (s), 'ims'
+      - provider (enum - org.halfbaked.Ims.Provider???), 'sqlite'
+      - path (s), '@datadir@' ???
+      - username (s), ''
+      - password (s), ''
+      - dsn (s), ''
+      - reset (b), false
+    -->
+  </schema>
+</schemalist>
