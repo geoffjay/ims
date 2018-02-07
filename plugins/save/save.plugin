@@ -1,0 +1,7 @@
+[Plugin]
+Module=save
+Name=Save Pipeline Addin
+Description=Pipeline addin to save
+Authors=Geoff Johnson <geoff.jay@gmail.com>
+Copyright=Copyright © 2018 Geoff Johnson
+Builtin=true
