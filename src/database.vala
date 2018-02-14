@@ -58,8 +58,6 @@ public class Ims.Database : GLib.Object {
         }
 
         conn.error.connect (error_cb);
-
-        dump_db_schema ();
     }
 
     ~Database () {

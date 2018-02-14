@@ -5,12 +5,13 @@ public errordomain Ims.PluginError {
 public class Ims.PluginManager : GLib.Object {
 
     private Peas.Engine engine;
-    private Peas.ExtensionSet pipeline_extensions;
-    private Peas.ExtensionSet router_extensions;
     private string[] search_paths = { Ims.PLUGINDIR };
 
     private Ims.Pipeline pipeline;
     private Ims.Router router;
+
+    private Ims.PipelineManager pipeline_manager;
+    //private Ims.RouteController route_controller;
 
     public signal void plugin_available (string name);
 
@@ -21,60 +22,40 @@ public class Ims.PluginManager : GLib.Object {
         pipeline = app.get_pipeline ();
         router = app.get_router ();
 
-        init ();
-        load ();
+        setup_plugins ();
+
+        pipeline_manager = new Ims.PipelineManager (pipeline);
+        //route_controller = new Ims.RouteController (router);
+
+        load_plugins ();
     }
 
-    private void init () {
+    private void setup_plugins () {
         GLib.Environment.set_variable ("PEAS_ALLOW_ALL_LOADERS", "1", true);
         engine.enable_loader ("python3");
+
+        try {
+            var repo = GI.Repository.get_default();
+            repo.require("Peas", "1.0", 0);
+            repo.require("Ims", "1.0", 0);
+        } catch (Error e) {
+            message("Error loading typelibs: %s", e.message);
+        }
 
         foreach (var path in search_paths) {
             debug ("Loading plugins from %s", path);
             engine.add_search_path (path, null);
         }
 
-        add_pipeline_extension ();
-        add_router_extension ();
+        engine.rescan_plugins ();
     }
 
-    private void load () {
+    private void load_plugins () {
         foreach (var plugin in engine.get_plugin_list ()) {
             if (engine.try_load_plugin (plugin)) {
                 debug (plugin.get_name () + " loaded by the plugin manager");
             }
         }
-    }
-
-    private void add_pipeline_extension () {
-        pipeline_extensions = new Peas.ExtensionSet (engine,
-                                                     typeof (Ims.PipelineAddin),
-                                                     "pipeline",
-                                                     pipeline);
-
-        pipeline_extensions.extension_added.connect ((info, extension) => {
-            /* TODO handle extension setup during addition */
-            debug ("%s pipeline component was added", info.get_name ());
-        });
-
-        pipeline_extensions.extension_removed.connect ((info, extension) => {
-            /* TODO handle extension clean up after removal */
-            debug ("%s pipeline component was removed", info.get_name ());
-        });
-    }
-
-    private void add_router_extension () {
-        router_extensions = new Peas.ExtensionSet (engine, typeof (Ims.RouterAddin));
-
-        router_extensions.extension_added.connect ((info, extension) => {
-            /* TODO handle extension setup during addition */
-            debug ("%s router component was added", info.get_name ());
-        });
-
-        router_extensions.extension_removed.connect ((info, extension) => {
-            /* TODO handle extension clean up after removal */
-            debug ("%s router component was removed", info.get_name ());
-        });
     }
 
     public void add_search_path (string path) {
@@ -96,7 +77,11 @@ public class Ims.PluginManager : GLib.Object {
                 "Cannot enable %s, not found", plugin);
         }
 
-        debug ("FIXME: this should be a plugin, not an extension");
+        debug ("Enable %s", plugin);
+        if (engine.provides_extension (info, typeof (Ims.PipelineAddin))) {
+            debug ("Plugin %s provides PipelineAddin extension", plugin);
+            pipeline_manager.load_pipeline_addin (info);
+        }
     }
 
     public void disable_plugin (string plugin) throws GLib.Error {
@@ -106,6 +91,10 @@ public class Ims.PluginManager : GLib.Object {
                 "Cannot disable %s, not found", plugin);
         }
 
-        debug ("FIXME: this should be a plugin, not an extension");
+        debug ("Disable %s", plugin);
+        if (engine.provides_extension (info, typeof (Ims.PipelineAddin))) {
+            debug ("Plugin %s provides PipelineAddin extension", plugin);
+            pipeline_manager.unload_pipeline_addin (info);
+        }
     }
 }

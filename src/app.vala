@@ -29,15 +29,15 @@ public class Ims.App : GLib.Object {
             error (e.message);
         }
 
-        plugin_manager = new Ims.PluginManager ();
-        var model = Ims.Model.get_default ();
-        model.init ();
-
         pipeline = new Ims.Pipeline ();
 
         router = new Ims.Router ();
         var image_router = new ImageRouter ();
         router.add_router (image_router, "images", "/api/images");
+
+        plugin_manager = new Ims.PluginManager ();
+        var model = Ims.Model.get_default ();
+        model.init ();
 
         running = true;
 

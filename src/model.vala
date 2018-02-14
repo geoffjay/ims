@@ -65,7 +65,7 @@ public class Ims.Model : GLib.Object {
         public virtual int create (T object) {
             Value id;
             try {
-                var type = (object as Object).get_type ();
+                //var type = (object as Object).get_type ();
                 db.insert (name, object, out id);
             } catch (GLib.Error e) {
                 critical (e.message);

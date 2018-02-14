@@ -16,6 +16,7 @@ ims_lib_sources = [
   'lib/pipeline.vala',
   'lib/pipeline-addin.vala',
   'lib/pipeline-element.vala',
+  'lib/pipeline-manager.vala',
   'lib/router.vala',
   'lib/router-addin.vala',
 ]
