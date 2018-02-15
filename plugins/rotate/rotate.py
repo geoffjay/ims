@@ -1,15 +1,12 @@
 import gi
 
 gi.require_version('Ims', '1.0')
-gi.require_version('Peas', '1.0')
 
 from gi.repository import GLib
 from gi.repository import GObject
-from gi.repository import Peas
 from gi.repository import Ims
 
-# class RotatePlugin(GObject.Object, Peas.Activatable):
-class RotatePlugin(GObject.Object, Ims.PipelineAddin):
+class RotatePlugin(GObject.Object, Ims.Plugin):
     __gtype_name__ = 'RotatePlugin'
 
     object = GObject.property(type=GObject.Object)
@@ -17,19 +14,16 @@ class RotatePlugin(GObject.Object, Ims.PipelineAddin):
     def __init__(self):
         GObject.Object.__init__(self)
         print('Construct rotate pipeline addin')
-        self.element = RotateElement()
+        # self.element = RotateElement()
 
     def do_get_element(self):
         return self.element
 
-    # def do_activate(self):
-        # print('Rotate plugin activated')
+    def do_load(self):
+        print('Load rotate plugin')
 
-    # def do_deactivate(self):
-        # print('Rotate plugin deactivated')
-
-    # def do_update_state(self):
-        # print('Rotate plugin state updated')
+    def do_unload(self):
+        print('Unload rotate plugin')
 
 # class RotateAddin(GObject.Object, Peas.Activatable):
     # __gtype_name__ = 'RotateAddin'
@@ -48,8 +42,8 @@ class RotatePlugin(GObject.Object, Ims.PipelineAddin):
 
 # XXX Should there also be an Ims.PipelineElementProvider class?
 
-class RotateElement(Ims.PipelineElement):
-    __gtype_name__ = 'RotateElement'
+# class RotateElement(Ims.PipelineElement):
+    # __gtype_name__ = 'RotateElement'
 
-    def __init__(self):
-        print('Construct rotate pipeline element')
+    # def __init__(self):
+        # print('Construct rotate pipeline element')

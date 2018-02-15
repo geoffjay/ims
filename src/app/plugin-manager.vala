@@ -78,10 +78,16 @@ public class Ims.PluginManager : GLib.Object {
         }
 
         debug ("Enable %s", plugin);
-        if (engine.provides_extension (info, typeof (Ims.PipelineAddin))) {
-            debug ("Plugin %s provides PipelineAddin extension", plugin);
+        if (engine.provides_extension (info, typeof (Ims.Plugin))) {
+            debug ("Plugin %s provides Plugin extension", plugin);
             pipeline_manager.load_pipeline_addin (info);
         }
+        /*
+         *if (engine.provides_extension (info, typeof (Ims.PipelineAddin))) {
+         *    debug ("Plugin %s provides PipelineAddin extension", plugin);
+         *    pipeline_manager.load_pipeline_addin (info);
+         *}
+         */
     }
 
     public void disable_plugin (string plugin) throws GLib.Error {
@@ -92,9 +98,15 @@ public class Ims.PluginManager : GLib.Object {
         }
 
         debug ("Disable %s", plugin);
-        if (engine.provides_extension (info, typeof (Ims.PipelineAddin))) {
-            debug ("Plugin %s provides PipelineAddin extension", plugin);
+        if (engine.provides_extension (info, typeof (Ims.Plugin))) {
+            debug ("Plugin %s provides Plugin extension", plugin);
             pipeline_manager.unload_pipeline_addin (info);
         }
+        /*
+         *if (engine.provides_extension (info, typeof (Ims.PipelineAddin))) {
+         *    debug ("Plugin %s provides PipelineAddin extension", plugin);
+         *    pipeline_manager.unload_pipeline_addin (info);
+         *}
+         */
     }
 }

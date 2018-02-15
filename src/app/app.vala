@@ -19,21 +19,25 @@ public class Ims.App : GLib.Object {
 
         var settings = new GLib.Settings ("org.halfbaked.Ims");
 
-        try {
-            //var bind = "%s:%d".printf (config.get_address (), config.get_port ());
-            var host = settings.get_string ("host");
-            var port = settings.get_int ("port");
-            var bind = "%s:%d".printf (host, port);
-            _args = { "ims", "--address", bind };
-        } catch (GLib.Error e) {
-            error (e.message);
-        }
+        /*
+         *try {
+         *    var bind = "%s:%d".printf (config.get_address (), config.get_port ());
+         *    _args = { "ims", "--address", bind };
+         *} catch (GLib.Error e) {
+         *    error (e.message);
+         *}
+         */
+
+        var host = settings.get_string ("host");
+        var port = settings.get_int ("port");
+        var bind = "%s:%d".printf (host, port);
+        _args = { "ims", "--address", bind };
 
         pipeline = new Ims.Pipeline ();
 
-        router = new Ims.Router ();
+        router = new Ims.AppRouter ();
         var image_router = new ImageRouter ();
-        router.add_router (image_router, "images", "/api/images");
+        router.add_router (image_router);
 
         plugin_manager = new Ims.PluginManager ();
         var model = Ims.Model.get_default ();

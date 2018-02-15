@@ -10,10 +10,8 @@ libconfig = static_library('config', libconfig_sources,
 )
 
 link_libconfig = declare_dependency(
-  link_with: libconfig,
-  include_directories: [
-    include_directories('.'),
-  ],
+            link_with: libconfig,
+  include_directories: [ include_directories('.'), ],
 )
 
 # Expose this directory to use with vapidir

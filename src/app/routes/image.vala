@@ -2,9 +2,12 @@ using VSGI;
 using Valum;
 using Valum.ContentNegotiation;
 
-public class Ims.ImageRouter : Valum.Router {
+public class Ims.ImageRouter : Ims.Router {
 
     construct {
+        domain = "images";
+        path = "/images";
+
         rule (Method.GET,
               "/(<int:id>)?",
               view_cb);
@@ -50,12 +53,14 @@ public class Ims.ImageRouter : Valum.Router {
 
         switch (content_type) {
             case "application/json":
-                try {
-                    // TODO something
-                } catch (GLib.Error e) {
-                    throw new ClientError.BAD_REQUEST (
-                        "Invalid or malformed JSON was provided");
-                }
+                /*
+                 *try {
+                 *    // TODO something
+                 *} catch (GLib.Error e) {
+                 *    throw new ClientError.BAD_REQUEST (
+                 *        "Invalid or malformed JSON was provided");
+                 *}
+                 */
                 break;
             default:
                 throw new ClientError.BAD_REQUEST (
@@ -69,12 +74,14 @@ public class Ims.ImageRouter : Valum.Router {
                             throws GLib.Error {
         switch (content_type) {
             case "application/json":
-                try {
-                    // TODO something
-                } catch (GLib.Error e) {
-                    throw new ClientError.BAD_REQUEST (
-                        "Invalid or malformed JSON was provided");
-                }
+                /*
+                 *try {
+                 *    // TODO something
+                 *} catch (GLib.Error e) {
+                 *    throw new ClientError.BAD_REQUEST (
+                 *        "Invalid or malformed JSON was provided");
+                 *}
+                 */
                 break;
             default:
                 throw new ClientError.BAD_REQUEST (
@@ -86,8 +93,8 @@ public class Ims.ImageRouter : Valum.Router {
 
     private bool delete_cb (Request req, Response res, NextCallback next, Context context)
                             throws GLib.Error{
-        var id = context["id"];
         /*
+         *var id = context["id"];
          *var model = Ims.Model.get_default ();
          *if (id != null) {
          *    model.images.delete (int.parse (id.get_string ()));

@@ -3,7 +3,7 @@ save_sources = [
   'pipeline-addin.vala',
 ]
 
-save_deps = ims_deps + [ ims ]
+save_deps = [ ims_deps ]
 save_vala_args = [ ims_vala_args ]
 
 shared_module('save', save_sources,

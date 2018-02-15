@@ -10,19 +10,24 @@ public class Ims.PipelineManager : GLib.Object {
         this.pipeline = pipeline;
         var engine = Peas.Engine.get_default ();
 
-        pipeline_extensions = new Peas.ExtensionSet (engine,
-                                                     typeof (Ims.PipelineAddin),
-                                                     "pipeline_manager",
-                                                     this);
+        /*
+         *pipeline_extensions = new Peas.ExtensionSet (engine,
+         *                                             typeof (Ims.PipelineAddin),
+         *                                             "pipeline_manager",
+         *                                             this);
+         */
 
         /*
          * //proxy = new Ims.PipelineAddinProxy (this);
-         *pipeline_extensions = new Peas.ExtensionSet (Peas.Engine.get_default (),
+         *pipeline_extensions = new Peas.ExtensionSet (engine,
          *                                             typeof (Peas.Activatable));//,
          *                                             //"object",
          *                                             //proxy,
          *                                             //null);
          */
+
+        pipeline_extensions = new Peas.ExtensionSet (engine, typeof (Ims.Plugin));
+        //pipeline_extensions = new Peas.ExtensionSet (engine, typeof (Peas.Activatable));
 
         pipeline_extensions.extension_added.connect (extension_added_cb);
         pipeline_extensions.extension_removed.connect (extension_removed_cb);
@@ -44,24 +49,26 @@ public class Ims.PipelineManager : GLib.Object {
     private void extension_added_cb (Peas.PluginInfo info, GLib.Object exten) {
         /* TODO handle extension setup during addition */
         debug ("%s pipeline component was added", info.get_name ());
-        (exten as Peas.Activatable).activate ();
-        //(exten as Ims.PipelineAddin).load (pipeline);
+        //(exten as Peas.Activatable).activate ();
+        (exten as Ims.Plugin).load ();
     }
 
     private void extension_removed_cb (Peas.PluginInfo info, GLib.Object exten) {
         /* TODO handle extension clean up after removal */
         debug ("%s pipeline component was removed", info.get_name ());
-        (exten as Peas.Activatable).deactivate ();
-        //(exten as Ims.PipelineAddin).unload (pipeline);
+        //(exten as Peas.Activatable).deactivate ();
+        (exten as Ims.Plugin).unload ();
     }
 
     public void load_pipeline_addin (Peas.PluginInfo info) throws GLib.Error {
-        var extension = pipeline_extensions.get_extension (info);
-        (extension as Ims.PipelineAddin).load (this);
+        debug ("Load pipeline addin: %s", info.get_name ());
+        //var extension = pipeline_extensions.get_extension (info);
+        //(extension as Ims.PipelineAddin).load (this);
     }
 
     public void unload_pipeline_addin (Peas.PluginInfo info) throws GLib.Error {
-        var extension = pipeline_extensions.get_extension (info);
-        (extension as Ims.PipelineAddin).unload (this);
+        debug ("Unload pipeline addin: %s", info.get_name ());
+        //var extension = pipeline_extensions.get_extension (info);
+        //(extension as Ims.PipelineAddin).unload (this);
     }
 }

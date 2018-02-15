@@ -1,5 +1,5 @@
 project('ims', [ 'c', 'vala' ],
-          license: 'GPL3+',
+          license: 'LGPL3+',
           version: '0.1.0',
     meson_version: '>= 0.40.1',
   default_options: [
@@ -38,6 +38,25 @@ status += [
   'Libdir ................................ : @0@'.format(join_paths(get_option('prefix'), get_option('libdir'))),
   '', ''
 ]
+
+am_cflags = [
+  '-fstack-protector',
+  '-fPIC',
+  '-pedantic',
+  '-Wstrict-prototypes',
+  '-Wundef',
+  '-Werror-implicit-function-declaration',
+  '-Wformat',
+  '-Wformat-security',
+  '-Werror=format-security',
+  '-Wconversion',
+  '-Wunused-variable',
+  '-Wunreachable-code',
+  '-Wall',
+  '-W',
+]
+
+add_global_arguments(am_cflags, language: 'c')
 
 add_project_arguments([
   ['--vapidir', join_paths(meson.current_source_dir(), 'vapi')],
@@ -82,6 +101,7 @@ pkg_datadir = join_paths(get_option('prefix'), get_option('datadir'), meson.proj
 pkg_libdir = join_paths(get_option('prefix'), get_option('libdir'))
 pkg_sysconfdir = join_paths(get_option('sysconfdir'), meson.project_name())
 pkg_plugindir = join_paths(get_option('prefix'), get_option('libdir'), meson.project_name(), 'plugins')
+pkg_typelibdir = join_paths(get_option('libdir'), 'girepository-1.0')
 
 subst.set('bindir', join_paths(get_option('prefix'), get_option('bindir')))
 subst.set('datadir', pkg_datadir)
