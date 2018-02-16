@@ -41,9 +41,9 @@ struct _ImsElementProviderInterface
 {
     GTypeInterface parent;
 
-    ImsPipelineElement *    (*get_pipeline_element)     (ImsElementProvider *self);
+    ImsElement *    (*get_element)     (ImsElementProvider *self);
 };
 
-ImsPipelineElement *ims_element_provider_get_pipeline_element (ImsElementProvider *self);
+ImsElement *ims_element_provider_get_element (ImsElementProvider *self);
 
 G_END_DECLS

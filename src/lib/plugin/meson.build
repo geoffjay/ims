@@ -23,6 +23,7 @@ plugin_deps = [
   dep_gdkpixbuf,
   dep_peas,
   dep_valum,
+  link_libims,
 ]
 
 # Fight meson race conditions..

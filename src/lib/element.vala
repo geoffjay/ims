@@ -1,10 +1,10 @@
-public class Ims.PipelineElement : GLib.Object {
+public class Ims.Element : GLib.Object {
 
     private GLib.HashTable<string, Variant> inputs;
 
     private GLib.HashTable<string, Variant> outputs;
 
-    public PipelineElement () {
+    public Element () {
         inputs = new GLib.HashTable<string, Variant> (null, null);
         outputs = new GLib.HashTable<string, Variant> (null, null);
     }

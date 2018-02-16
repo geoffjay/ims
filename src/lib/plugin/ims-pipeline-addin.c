@@ -19,7 +19,6 @@
 
 #define G_LOG_DOMAIN "ims-pipeline-addin"
 
-#include "ims.h"
 #include "ims-enums.h"
 /*#include "ims-pipeline-addin.h"*/
 

@@ -6,12 +6,12 @@
 
 public class Ims.Pipeline : GLib.Object {
 
-    Gee.ArrayList<Ims.PipelineElement> elements;
+    Gee.ArrayList<Ims.Element> elements;
 
     public Pipeline () {
     }
 
-    public void register_element (Ims.PipelineElement element) {
+    public void register_element (Ims.Element element) {
         elements.add (element);
         debug ("Do a thing");
     }
@@ -23,10 +23,10 @@ public class Ims.Pipeline : GLib.Object {
         }
     }
 
-    public void add_element (Ims.PipelineElement element) throws GLib.Error {
+    public void add_element (Ims.Element element) throws GLib.Error {
     }
 
-    public void remove_element (Ims.PipelineElement element) throws GLib.Error {
+    public void remove_element (Ims.Element element) throws GLib.Error {
     }
 
     public void start_execution () throws GLib.Error {

@@ -6,5 +6,5 @@ ims_vala_args = [
 ]
 
 subdir('lib')
-#subdir('plugin')
+subdir('lib/plugin')
 subdir('app')

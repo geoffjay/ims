@@ -14,10 +14,6 @@ class RotatePlugin(GObject.Object, Ims.Plugin):
     def __init__(self):
         GObject.Object.__init__(self)
         print('Construct rotate pipeline addin')
-        # self.element = RotateElement()
-
-    def do_get_element(self):
-        return self.element
 
     def do_load(self):
         print('Load rotate plugin')
@@ -25,25 +21,20 @@ class RotatePlugin(GObject.Object, Ims.Plugin):
     def do_unload(self):
         print('Unload rotate plugin')
 
-# class RotateAddin(GObject.Object, Peas.Activatable):
-    # __gtype_name__ = 'RotateAddin'
+# class RotateElementProvider(GObject.Object, Ims.ElementProvider):
+    # __gtype_name__ = 'RotateElementProvider'
 
-    # object = GObject.property(type=GObject.Object)
+    # def __init__(self):
+        # GObject.Object.__init__(self)
+        # print('Construct rotate pipeline element provider')
+        # self.element = RotateElement()
 
-    # # pipeline_manager = GObject.property(type=Ims.PipelineManager)
-    # # pipeline_manager = None
+    # def do_get_element(self):
+        # return self.element
 
-    # def do_load(self, pipeline_manager):
-        # print('Load rotate pipeline addin')
-        # # self.pipeline_manager = self.object.get_pipeline_manager()
-
-    # def do_unload(self, pipeline_manager):
-        # print('Unload rotate pipeline addin')
-
-# XXX Should there also be an Ims.PipelineElementProvider class?
-
-# class RotateElement(Ims.PipelineElement):
+# class RotateElement(Ims.Element):
     # __gtype_name__ = 'RotateElement'
 
     # def __init__(self):
+        # GObject.Object.__init__(self)
         # print('Construct rotate pipeline element')

@@ -19,14 +19,13 @@
 
 #define G_LOG_DOMAIN "ims-element-provider"
 
-#include "ims.h"
 #include "ims-enums.h"
 /*#include "ims-element-provider.h"*/
 
 G_DEFINE_INTERFACE (ImsElementProvider, ims_element_provider, G_TYPE_OBJECT)
 
-static ImsPipelineElement *
-ims_element_provider_real_get_pipeline_element (ImsElementProvider *self)
+static ImsElement *
+ims_element_provider_real_get_element (ImsElementProvider *self)
 {
     return NULL;
 }
@@ -34,13 +33,13 @@ ims_element_provider_real_get_pipeline_element (ImsElementProvider *self)
 static void
 ims_element_provider_default_init (ImsElementProviderInterface *iface)
 {
-    iface->get_pipeline_element = ims_element_provider_real_get_pipeline_element;
+    iface->get_element = ims_element_provider_real_get_element;
 }
 
-ImsPipelineElement *ims_element_provider_get_pipeline_element (ImsElementProvider *self)
+ImsElement *ims_element_provider_get_element (ImsElementProvider *self)
 {
     g_return_val_if_fail (!self, NULL);
     g_return_val_if_fail (IMS_IS_ELEMENT_PROVIDER, NULL);
 
-    return IMS_ELEMENT_PROVIDER_GET_IFACE (self)->get_pipeline_element (self);
+    return IMS_ELEMENT_PROVIDER_GET_IFACE (self)->get_element (self);
 }

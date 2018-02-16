@@ -1,15 +1,15 @@
-subdir('plugin')
-
 libims_sources = [
   'image.vala',
   'element.vala',
   'pipeline.vala',
   'router.vala',
   'plugin/ims-plugin.c',
+  #'plugin/ims-element-provider.c',
 ]
 
 libims_headers = [
   'plugin/ims-plugin.h',
+  #'plugin/ims-element-provider.h',
 ]
 
 libims_reqs = [
@@ -39,11 +39,15 @@ libims = library('ims-' + api_version, libims_sources + libims_headers,
    install_dir: [true, true, true],
 )
 
-###
+# TODO: Generate vapi (and typelib?) from the one gir
+
+gir_sources = libims_sources + libims_headers + [
+  join_paths(meson.build_root(), 'src', 'lib', 'ims.h')
+]
 
 gnome = import('gnome')
 libims_gir = gnome.generate_gir(libims,
-            sources: libims_sources + libims_headers,
+            sources: gir_sources,
           namespace: 'Ims',
           nsversion: '@0@'.format(api_version),
        dependencies: ims_deps,
