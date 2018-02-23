@@ -22,7 +22,14 @@ public class Ims.DBus : GLib.Object {
         app.shutdown ();
     }
 
-    /* Plugin related methods */
+    /* Database */
+
+    public void test_database () {
+        var model = Ims.Model.get_default ();
+        model.test_db ();
+    }
+
+    /* Plugin */
 
     public string[] get_loaded_plugins () {
         return plugin_manager.get_loaded_plugins ();

@@ -1,399 +1,202 @@
+using Couchbase;
+using LibCouchbase;
+
 public errordomain Ims.DatabaseError {
-    EXECUTE_QUERY,
-    PARSE
+    GET,
+    ADD,
+    SET,
+    REPLACE,
+    REMOVE,
+    FLUSH
 }
 
 /**
- * FIXME Maybe... Don't pull config into this class, use Parameters[] instead (?)
+ * TODO: Move this into unit tests
  */
-public class Ims.Database : GLib.Object {
+internal class Ims.TestObject : Object {
+    /* Simple value types */
+    public string s_val { get; set; }
+    public int i_val { get; set; }
+    public double f_val { get; set; }
+    public bool b_val { get; set; }
+    public DateTime dt_val {
+        get; set; default = new DateTime.now_local ();
+    }
 
-    public Gda.Connection conn { get; construct set; }
+    /* List/Array value types */
+    public string[] s_a_val { get; set; }
+    public Gee.ArrayList<string> s_al_val {
+        get; set; default = new Gee.ArrayList<string> ();
+    }
+
+    /* Object types */
+    [Description (blurb = "ignore")]
+    public Object o_val { get; set; }
+    public Couchbase.JSON.Node n_val { get; set; }
+
+    public TestObject.with_data () {
+        s_val = "s-val";
+        i_val = 1;
+        f_val = 2.2;
+        b_val = true;
+
+        s_a_val = { "s-a-val-1", "s-a-val-2" };
+        s_al_val.add ("s-al-val-1");
+        s_al_val.add ("s-al-val-2");
+
+        // XXX For now
+        //o_val = new Ims.TestObject.SubObject.with_data ();
+        var builder = new Json.Builder ();
+        builder.begin_object ();
+        builder.set_member_name ("n-val-1");
+        builder.add_string_value ("n-val-1-1");
+        builder.set_member_name ("n-val-2");
+        builder.add_string_value ("n-val-2");
+        builder.set_member_name ("n-val-i-a");
+        builder.begin_array ();
+        builder.add_int_value (1);
+        builder.add_int_value (2);
+        builder.end_array ();
+        builder.end_object ();
+        n_val = new JSON.Node (builder.get_root ());
+    }
+
+    public string to_string () {
+        size_t length = -1;
+        string data = Json.gobject_to_data (this, out length);
+        return data;
+    }
+}
+
+public class Ims.Database : Object {
+
+    private Couchbase.Client client;
 
     public Database () {
-        var config = Ims.Config.get_default ();
+        var settings = new Settings ("org.halfbaked.ims");
+        var db_settings = settings.get_child ("database");
 
-        /* Establish database connection */
         try {
-            var dsn = config.get_db_dsn ();
-            if (dsn != null) {
-                conn = Gda.Connection.open_from_dsn (dsn, null,
-                            Gda.ConnectionOptions.THREAD_SAFE);
-            } else {
-                string cnc = "";
-                var provider = config.get_db_provider ();
-                switch (config.get_db_provider ()) {
-                    case "MySQL":
-                        cnc = "DB_NAME=%s;HOST=%s;PORT=%d;USERNAME=%s;PASSWORD=%s".printf (
-                                    config.get_db_name (),
-                                    config.get_db_host (),
-                                    config.get_db_port (),
-                                    config.get_db_username (),
-                                    config.get_db_password ());
-                        break;
-                    case "PostgreSQL":
-                        cnc = "DB_NAME=%s;HOST=%s;PORT=%d;USERNAME=%s;PASSWORD=%s".printf (
-                                    config.get_db_name (),
-                                    config.get_db_host (),
-                                    config.get_db_port (),
-                                    config.get_db_username (),
-                                    config.get_db_password ());
-                        break;
-                    case "SQLite":
-                        var db_file = GLib.Path.build_filename (config.get_db_path (),
-                                                                config.get_db_name ());
-                        db_file += ".db";
-                        cnc = "DB_DIR=%s;DB_NAME=%s".printf (config.get_db_path (),
-                                                             config.get_db_name ());
-                        break;
-                    default:
-                        /* Should never make it here */
-                        break;
-                }
-                conn = Gda.Connection.open_from_string (provider, cnc, null,
-                            Gda.ConnectionOptions.THREAD_SAFE);
-            }
-        } catch (GLib.Error e) {
-            error ("An error occurred connecting to the database: %s", e.message);
-        }
+            var bucket = db_settings.get_string ("bucket");
+            var host = db_settings.get_string ("host");
+            var user = db_settings.get_string ("user");
+            var password = db_settings.get_string ("password");
 
-        conn.error.connect (error_cb);
+            /* TODO: Test settings and throw exception on something dumb */
+
+            client = new Couchbase.Client (host, bucket, user, password);
+        } catch (Couchbase.ClientError ce) {
+            /* TODO: Throw exception */
+            critical ("Error connecting Couchbase client: %s", ce.message);
+        }
     }
 
-    ~Database () {
-        conn.close ();
+    public void test () {
+        var obj = new Ims.TestObject.with_data ();
+        try {
+            @set ("test_object", obj);
+            var t_obj = @get<Ims.TestObject> ("test_object");
+            debug (t_obj.to_string ());
+        } catch (Ims.DatabaseError de) {
+            critical (de.message);
+        }
+    }
+
+    public T? @get<T> (string uuid) throws Ims.DatabaseError {
+        T? document = client.get_object<T> (uuid);
+        if (document == null) {
+            throw new Ims.DatabaseError.GET (
+                "Failed to get object with key: %s", uuid
+            );
+        }
+
+        return document;
+    }
+
+    public T[] get_all<T> () throws Ims.DatabaseError {
+        // TODO: Return a query result
+        T[] results = new T[0];
+        return results;
     }
 
     /**
-     * XXX Just for debugging (?)
+     * Add a new object with the provided UUID and document data.
+     *
+     * @param uuid ID of the document
+     * @param document Document to store
+     * @throws Ims.DatabaseError
      */
-    private void error_cb (Gda.ConnectionEvent error) {
-        debug ("libgda connection error: %s", error.get_description ());
-    }
-
-    /**
-     * XXX This is nothing, just used during testing and should be removed later
-     */
-    private void dump_db_schema () {
-        try {
-            var meta_store = conn.get_meta_store ();
-            var schema = meta_store.schema_get_structure ();
-            var db_objs = schema.get_all_db_objects ();
-            debug ("%12s%12s%32s%12s", "Catalog", "Schema", "Name", "Type");
-            db_objs.@foreach ((obj) => {
-                string obj_type = "unknown";
-                if (obj.obj_type == Gda.MetaDbObjectType.TABLE) {
-                    obj_type = "table";
-                } else if (obj.obj_type == Gda.MetaDbObjectType.VIEW) {
-                    obj_type = "view";
-                }
-                debug ("%12s%12s%32s%12s", obj.obj_catalog, obj.obj_schema, obj.obj_name, obj_type);
-            });
-        } catch (GLib.Error e) {
-            warning ("Error while dumping schema: %s", e.message);
-        }
-    }
-
-    public void create_table (string name, Type type) {
-        string sql = "CREATE TABLE IF NOT EXISTS %s".printf (name);
-        string[] values = {};
-        var ocl = (ObjectClass) type.class_ref ();
-
-        var config = Ims.Config.get_default ();
-        var provider = config.get_db_provider ();
-
-        foreach (var spec in ocl.list_properties ()) {
-            string? value_type = null;
-
-            /* FIXME This may only work for SQLite */
-            if (spec.value_type == typeof (string)) {
-                value_type = "VARCHAR";
-            } else if (spec.value_type == typeof (bool)) {
-                value_type = "BOOLEAN";
-            } else if (spec.value_type == typeof (int)) {
-                value_type = "INTEGER";
-            } else if (spec.value_type == typeof (long)) {
-                value_type = "BIGINT";
-            } else if (spec.value_type == typeof (float)) {
-                value_type = "FLOAT";
-            } else if (spec.value_type == typeof (double)) {
-                value_type = "DOUBLE";
-            }
-
-            /* Skip unrecognized property types */
-            if (value_type == null) {
-                continue;
-            }
-
-            var value = "%s %s".printf (spec.get_name (), value_type);
-            if (spec.get_nick () == "primary_key") {
-                if (provider == "PostgreSQL") {
-                    value += " SERIAL PRIMARY KEY";
-                } else {
-                    value += " NOT NULL PRIMARY KEY";
-                }
-            }
-
-            if (spec.get_nick () == "unique") {
-                value += " NOT NULL UNIQUE";
-            }
-
-            values += value;
-        }
-
-        sql += " (";
-        for (int i = 0; i < values.length; i++) {
-            sql += values[i];
-            if (i != values.length - 1) {
-                sql += ", ";
-            }
-        }
-        sql += ")";
-
-        try {
-            conn.execute_non_select_command (sql);
-            debug ("SQL: [%s]", sql);
-            conn.update_meta_store (null);
-        } catch (GLib.Error e) {
-            critical ("Error creating table '%s': %s", name, e.message);
-        }
-    }
-
-    public void delete_table (string name) {
-        try {
-            conn.execute_non_select_command ("DROP TABLE IF EXISTS %s".printf (name));
-            conn.update_meta_store (null);
-        } catch (GLib.Error e) {
-            critical ("Error deleting table '%s': %s", name, e.message);
-        }
-    }
-
-    public int count (string table) throws GLib.Error {
-        var builder = new Gda.SqlBuilder (Gda.SqlStatementType.SELECT);
-        builder.select_add_target (table, null);
-        builder.select_add_field ("count(*)", null, null);
-        var stmt = builder.get_statement ();
-        var dm = conn.statement_execute_select (stmt, null);
-        var count = dm.get_value_at (0, 0);
-
-        return count.get_int ();
-    }
-
-    /**
-     * FIXME Needs to return a record set
-     * FIXME This should be a generic Type select with ID (?)
-     * FIXME Make the ID field a generic (?)
-     * FIXME Read only properties can not be set in the returned object
-     */
-    public T[] select<T> (string table, Value? id = null,
-                          int n = 0,
-                          int offset = 0)
-                          throws GLib.Error {
-        var ocl = (ObjectClass) typeof (T).class_ref ();
-        var builder = new Gda.SqlBuilder (Gda.SqlStatementType.SELECT);
-        builder.select_add_target (table, null);
-        builder.select_add_field ("*", null, null);
-
-        try {
-            string? pk = null;
-            T[] result = {};
-
-            foreach (var spec in ocl.list_properties ()) {
-                if (spec.get_nick () == "primary_key") {
-                    pk = spec.get_name ();
-                }
-            }
-
-            if (pk == null) {
-                throw new DatabaseError.EXECUTE_QUERY (
-                    "No primary key was defined for '%s'", table);
-            }
-
-            var pk_id = builder.add_id (pk);
-            if (id != null) {
-                var expr_id = builder.add_expr_value (null, id);
-                var cond_id = builder.add_cond (Gda.SqlOperatorType.EQ, pk_id, expr_id, 0);
-                builder.set_where (cond_id);
-            } else {
-                var expr_start = builder.add_expr_value (null, offset);
-                var cond1_id = builder.add_cond (Gda.SqlOperatorType.GEQ, pk_id, expr_start, 0);
-                if (n != 0) {
-                    var expr_end = builder.add_expr_value (null, offset + n);
-                    var cond2_id = builder.add_cond (Gda.SqlOperatorType.LT, pk_id, expr_end, 0);
-                    var cond3_id = builder.add_cond (Gda.SqlOperatorType.AND, cond1_id, cond2_id, 0);
-                    builder.set_where (cond3_id);
-                } else {
-                    builder.set_where (cond1_id);
-                }
-            }
-
-            var stmt = builder.get_statement ();
-            var dm = conn.statement_execute_select (stmt, null);
-
-            for (int i = 0; i < dm.get_n_rows (); i++) {
-                var obj = Object.@new (typeof (T));
-                for (int j = 0; j < dm.get_n_columns (); j++) {
-                    var col = dm.get_column_name (j);
-                    var val = dm.get_value_at (j, i);
-                    unowned ParamSpec? spec = ocl.find_property (col);
-                    if (spec == null) {
-                        throw new DatabaseError.EXECUTE_QUERY (
-                            "The query returned an invalid object definition");
-                    }
-
-                    if (val.holds (typeof (string))) {
-                        obj[col] = val.get_string ();
-                    } else if (val.holds (typeof (bool))) {
-                        obj[col] = val.get_boolean ();
-                    } else if (val.holds (typeof (int))) {
-                        obj[col] = val.get_int ();
-                    } else if (val.holds (typeof (long))) {
-                        obj[col] = val.get_long ();
-                    } else if (val.holds (typeof (float))) {
-                        obj[col] = val.get_float ();
-                    } else if (val.holds (typeof (double))) {
-                        obj[col] = val.get_double ();
-                    }
-                }
-
-                result += obj;
-            }
-
-            return result;
-        } catch (GLib.Error e) {
-            throw new DatabaseError.EXECUTE_QUERY (
-                "Could not read record from '%s': %s", table, e.message);
-        }
-    }
-
-    public void insert<T> (string table, T object, out Value id) throws GLib.Error {
-        var builder = new Gda.SqlBuilder (Gda.SqlStatementType.INSERT);
-        builder.set_table (table);
-        try {
-            string[] columns = {};
-            var ocl = (ObjectClass) typeof (T).class_ref ();
-
-            foreach (var spec in ocl.list_properties ()) {
-                if (spec.get_nick () != "primary_key") {
-                    columns += spec.get_name ();
-                }
-            }
-
-            /* FIXME See update for example that doesn't do this nonsense */
-            for (int i = 0; i < columns.length; i++) {
-                unowned ParamSpec? spec = ocl.find_property (columns[i]);
-                if (spec.value_type == typeof (string)) {
-                    string val;
-                    ((Object) object).get (columns[i], out val);
-                    builder.add_field_value_as_gvalue (columns[i], val);
-                } else if (spec.value_type == typeof (bool)) {
-                    bool val;
-                    ((Object) object).get (columns[i], out val);
-                    builder.add_field_value_as_gvalue (columns[i], val);
-                } else if (spec.value_type == typeof (int)) {
-                    int val;
-                    ((Object) object).get (columns[i], out val);
-                    builder.add_field_value_as_gvalue (columns[i], val);
-                } else if (spec.value_type == typeof (long)) {
-                    long val;
-                    ((Object) object).get (columns[i], out val);
-                    builder.add_field_value_as_gvalue (columns[i], val);
-                } else if (spec.value_type == typeof (float)) {
-                    float val;
-                    ((Object) object).get (columns[i], out val);
-                    builder.add_field_value_as_gvalue (columns[i], val);
-                } else if (spec.value_type == typeof (double)) {
-                    double val;
-                    ((Object) object).get (columns[i], out val);
-                    builder.add_field_value_as_gvalue (columns[i], val);
-                }
-            }
-
-            try {
-                Gda.Set last_row, @params;
-                var stmt = builder.get_statement ();
-                stmt.get_parameters (out @params);
-                conn.statement_execute_non_select (stmt, @params, out last_row);
-            } catch (Error e) {
-                if (e.code != 4) {
-                    critical ("Error: %s code: %d", e.message, e.code);
-                }
-            }
-
-             /* Get the ID for the inserted row */
-            string sql = "SELECT COUNT (*) FROM %s".printf (table);
-            var dm = conn.execute_select_command (sql);
-            id = dm.get_value_at (0, 0);
-        } catch (GLib.Error e) {
-            throw new DatabaseError.EXECUTE_QUERY (
-                "Error creating '%s' record: %s", table, e.message);
+    public void add (string uuid, Object document) throws Ims.DatabaseError {
+        bool result = client.store_object (StoreMode.ADD, uuid, document);
+        if (!result) {
+            throw new Ims.DatabaseError.ADD (
+                "Failed to add object with key: %s", uuid
+            );
         }
     }
 
     /**
-     * FIXME This should be a generic Type update with ID (?)
+     * Overwrite an object with the provided UUID and document data.
+     *
+     * @param uuid ID of the document
+     * @param document Document to store
+     * @throws Ims.DatabaseError
      */
-    public void update<T> (string table, T object) throws GLib.Error {
-        try {
-            /* FIXME This is dumb */
-            int id = -1;
-            var sql = "UPDATE %s SET".printf (table);
-            var ocl = (ObjectClass) typeof (T).class_ref ();
-
-            foreach (var spec in ocl.list_properties ()) {
-                var val = Value (spec.value_type);
-                ((Object) object).get_property (spec.get_name (), ref val);
-                if (spec.get_nick () == "primary_key") {
-                    id = (int) val;
-                } else {
-                    sql += " %s = %s,".printf (spec.get_name (), val.strdup_contents ());
-                }
-            }
-
-            sql.data[sql.length - 1] = ' ';
-            sql += "WHERE id = %d".printf (id);
-            conn.execute_non_select_command (sql);
-        } catch (GLib.Error e) {
-            throw new DatabaseError.EXECUTE_QUERY (
-                "Error updating '%s' record: %s", table, e.message);
+    public void @set (string uuid, Object document) throws Ims.DatabaseError {
+        bool result = client.store_object (StoreMode.SET, uuid, document);
+        if (!result) {
+            throw new Ims.DatabaseError.SET (
+                "Failed to set object with key: %s", uuid
+            );
         }
     }
 
     /**
-     * FIXME This should be a generic Type delete with ID (?)
-     * FIXME Make the ID field a generic
-     * FIXME Include a Type to lookup name of ID field
+     * Replace an object with the provided UUID and document data.
+     *
+     * @param uuid ID of the document
+     * @param document Document to store
+     * @throws Ims.DatabaseError
      */
-    public void delete (string table, Value? id = null) throws GLib.Error {
-        try {
-            var sql = "DELETE FROM %s".printf (table);
-            sql += (id == null) ? "" : " WHERE id = %d".printf (id.get_int ());
-            /*debug (sql);*/
-            conn.execute_non_select_command (sql);
-        } catch (GLib.Error e) {
-            throw new DatabaseError.EXECUTE_QUERY (
-                "Error deleting '%s' record: %s", table, e.message);
-        }
-    }
-
-    public void delete_where (string table, string param, string value) throws GLib.Error {
-        try {
-            var sql = "DELETE FROM %s".printf (table);
-            sql += " WHERE %s = \"%s\"".printf (param, value);
-            debug (sql);
-            conn.execute_non_select_command (sql);
-        } catch (GLib.Error e) {
-            throw new DatabaseError.EXECUTE_QUERY (
-                "Error deleting '%s' record: %s", table, e.message);
+    public void replace (string uuid, Object document) throws Ims.DatabaseError {
+        bool result = client.store_object (StoreMode.REPLACE, uuid, document);
+        if (!result) {
+            throw new Ims.DatabaseError.REPLACE (
+                "Failed to replace object with key: %s", uuid
+            );
         }
     }
 
     /**
-     * TODO Add a generic Record type
-     * XXX This requires libgda-6.0 which is still unstable/unreleased
+     * Remove an object with the provided UUID.
+     *
+     * @param uuid ID of the document
+     * @throws Ims.DatabaseError
      */
-    /*
-     *public class Record<T> : GdaData.Record {
-     *}
+    public void remove (string uuid) throws Ims.DatabaseError {
+        bool result = client.remove (uuid);
+        if (!result) {
+            throw new Ims.DatabaseError.REMOVE (
+                "Failed to replace object with key: %s", uuid
+            );
+        }
+    }
+
+    /**
+     * Empty the database bucket.
+     *
+     * @throws Ims.DatabaseError
      */
+    public void flush () throws Ims.DatabaseError {
+        var response = client.instance.flush (null, null);
+        switch (response) {
+            case StatusResponse.SUCCESS:
+                debug ("Successfully flushed the database bucket");
+                break;
+            default:
+                throw new Ims.DatabaseError.FLUSH (
+                    "Received error while attempting to flush the database bucket"
+                );
+        }
+    }
 }

@@ -58,10 +58,14 @@ am_cflags = [
 
 add_global_arguments(am_cflags, language: 'c')
 
+dir_vapi = join_paths(meson.current_source_dir(), 'vapi')
+
 add_project_arguments([
-  ['--vapidir', join_paths(meson.current_source_dir(), 'vapi')],
+  ['--vapidir', dir_vapi],
 ], language: 'vala')
 
+dep_couch = dependency('libcouchbase')
+dep_gcouch = dependency('gcouchbase-0.1')
 dep_glib = dependency('glib-2.0')
 dep_gobject = dependency('gobject-2.0')
 dep_gio = dependency('gio-2.0')
@@ -78,6 +82,8 @@ dep_vsgi = dependency('vsgi-0.4', version: '>= 0.4.0')
 dep_posix = meson.get_compiler('vala').find_library('posix')
 
 ims_deps = [
+  dep_couch,
+  dep_gcouch,
   dep_glib,
   dep_gobject,
   dep_gio,

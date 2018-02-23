@@ -6,9 +6,14 @@
 
 public class Ims.Pipeline : GLib.Object {
 
-    Gee.ArrayList<Ims.Element> elements;
+    public string uuid { get; set; }
+
+    public Gee.ArrayList<Ims.Element> elements { get; set; }
+
+    public int position { get; set; default = 0; }
 
     public Pipeline () {
+        elements = new Gee.ArrayList<Ims.Element> ();
     }
 
     public void register_element (Ims.Element element) {

@@ -4,8 +4,7 @@ public class Ims.App : GLib.Object {
     private static Once<Ims.App> _instance;
 
     private VSGI.Server server;
-    private Ims.Router router;
-    private Ims.Pipeline pipeline;
+    private Ims.AppRouter router;
     private Ims.PluginManager plugin_manager;
     private bool running = false;
 
@@ -14,36 +13,39 @@ public class Ims.App : GLib.Object {
     }
 
     public int run () {
-        //var config = Ims.Config.get_default ();
         string[] _args;
 
-        var settings = new GLib.Settings ("org.halfbaked.Ims");
+        var settings = new GLib.Settings ("org.halfbaked.ims");
+        var rest_settings = settings.get_child ("rest");
 
-        /*
-         *try {
-         *    var bind = "%s:%d".printf (config.get_address (), config.get_port ());
-         *    _args = { "ims", "--address", bind };
-         *} catch (GLib.Error e) {
-         *    error (e.message);
-         *}
-         */
-
-        var host = settings.get_string ("host");
-        var port = settings.get_int ("port");
+        var host = rest_settings.get_string ("host");
+        var port = rest_settings.get_int ("port");
         var bind = "%s:%d".printf (host, port);
         _args = { "ims", "--address", bind };
 
-        pipeline = new Ims.Pipeline ();
-
-        router = new Ims.AppRouter ();
-        var image_router = new ImageRouter ();
-        router.add_router (image_router);
-
-        plugin_manager = new Ims.PluginManager ();
-        var model = Ims.Model.get_default ();
-        model.init ();
-
+        /* FIXME: Don't think this has any effect */
         running = true;
+
+        /* FIXME: This initializes the data model, should be clearer */
+        var model = Ims.Model.get_default ();
+        model.verify ();
+
+        /* Loads the plugins and extensions */
+        plugin_manager = new Ims.PluginManager ();
+
+        /* Load the REST API routes */
+        router = new Ims.AppRouter ();
+        /*
+         *var image_router = new ImageRouter ();
+         *router.add_router (image_router);
+         *var pipeline_router = new PipelineRouter ();
+         *router.add_router (pipeline_router);
+         */
+
+        router.add_router (new Ims.ElementRouter ());
+        router.add_router (new Ims.ImageRouter ());
+        router.add_router (new Ims.JobRouter ());
+        router.add_router (new Ims.PipelineRouter ());
 
         server = VSGI.Server.@new ("http", handler: router);
         return server.run (_args);
@@ -59,10 +61,6 @@ public class Ims.App : GLib.Object {
 
     public Ims.Router get_router () {
         return router;
-    }
-
-    public Ims.Pipeline get_pipeline () {
-        return pipeline;
     }
 
     public Ims.PluginManager get_plugin_manager () {

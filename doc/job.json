@@ -1,0 +1,35 @@
+{
+  "4c29a9bb-2f8e-4695-a791-06f58de6265b": {
+    "state": "ready",
+    "name": "lims0001",
+    "pipeline": {
+      "currentPosition": 0,
+      "elements": [
+        "rotate": {
+          "inputs": [
+            { "type": "image", "data": null }
+          ],
+          "outputs": [
+            { "type": "image", "data": null }
+          ]
+        },
+        "scale": {
+          "inputs": [
+            { "type": "image", "data": null }
+          ],
+          "outputs": [
+            { "type": "image", "data": null }
+          ]
+        },
+        "save": {
+          "inputs": [
+            { "type": "image", "data": null }
+          ],
+          "outputs": [
+            { "type": "value", "data": "/path/to/file.png" }
+          ]
+        }
+      ]
+    }
+  }
+}

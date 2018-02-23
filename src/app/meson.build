@@ -11,9 +11,12 @@ ims_sources = [
   'main.vala',
   'model.vala',
   'plugin-manager.vala',
-  'pipeline-manager.vala',
+  'pipeline-controller.vala',
   'router.vala',
-  'routes/image.vala',
+  'routes/elements.vala',
+  'routes/images.vala',
+  'routes/jobs.vala',
+  'routes/pipelines.vala',
 ]
 
 ims_deps += [

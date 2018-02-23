@@ -6,7 +6,13 @@ public class Ims.Model : GLib.Object {
     private static Once<Ims.Model> _instance;
 
     /* Object repositories */
-    public Repository<Ims.Image?> images { get; construct set; }
+    public Ims.Repository<Ims.Element> elements { get; construct set; }
+
+    public Ims.Repository<Ims.Image> images { get; construct set; }
+
+    public Ims.Repository<Ims.Job> jobs { get; construct set; }
+
+    public Ims.Repository<Ims.Pipeline> pipelines { get; construct set; }
 
     /**
      * @return Singleton for the Config class
@@ -15,157 +21,63 @@ public class Ims.Model : GLib.Object {
         return _instance.once (() => { return new Ims.Model (); });
     }
 
-    public void init () {
+    private Model () {
         db = new Ims.Database ();
+        elements = new Ims.Repository<Ims.Element> ();
+        images = new Ims.Repository<Ims.Image> ();
+        jobs = new Ims.Repository<Ims.Job> ();
+        pipelines = new Ims.Repository<Ims.Pipeline> ();
 
-        /* Create object repositories */
-        images = new Repository<Ims.Image?> (db);
+        jobs.item_created.connect (job_created_cb);
+        jobs.item_updated.connect (job_updated_cb);
+        jobs.item_deleted.connect (job_deleted_cb);
     }
 
-    public class Repository<T> : GLib.Object {
+    public void verify () {
+        debug ("Model verification doesn't do anything");
+    }
 
-        private Ims.Database db;
-        protected string name;
+    public void test_db () {
+        db.test ();
+    }
 
-        public Repository (Ims.Database db) {
-            this.db = db;
-            debug ("Created repository for %s objects", typeof (T).name ());
-            /* FIXME This could be (more) generic */
-            if (typeof (T).is_a (typeof (Ims.Image))) {
-                name = "images";
-            }
-
-            var config = Ims.Config.get_default ();
-
-            try {
-                if (config.get_db_reset ()) {
-                    db.delete_table (name);
-                }
-                db.create_table (name, typeof (T));
-            } catch (Error e) {
-                critical ("Error: %s", e.message);
-            }
+    private void job_created_cb (string uuid) {
+        debug ("Signal create Job in database");
+        try {
+            db.add (uuid, jobs.read<Ims.Job> (uuid));
+        } catch (Ims.DatabaseError de) {
+            warning (de.message);
         }
+    }
 
-        public virtual int count () {
-            int n = 0;
-
-            try {
-                n = db.count (name);
-            } catch (GLib.Error e) {
-                critical (e.message);
-            }
-
-            return n;
+    private void job_updated_cb (string uuid) {
+        debug ("Signal update Job in database");
+        try {
+            db.replace (uuid, jobs.read<Ims.Job> (uuid));
+        } catch (Ims.DatabaseError de) {
+            warning (de.message);
         }
+    }
 
-        /**
-         * @return The id which is also the primary key value from the database
-         */
-        public virtual int create (T object) {
-            Value id;
-            try {
-                //var type = (object as Object).get_type ();
-                db.insert (name, object, out id);
-            } catch (GLib.Error e) {
-                critical (e.message);
-            }
-
-            return id.get_int ();
-        }
-
-        public virtual T? read (int id) {
-            T[] records;
-            try {
-                var val_id = Value (typeof (int));
-                val_id.set_int (id);
-                records = db.select (name, val_id);
-                /* FIXME This should probably throw an exception instead */
-                if (records.length == 0) {
-                    critical ("Read failed for ID '%d'", id);
-                    return null;
-                }
-            } catch (GLib.Error e) {
-                critical (e.message);
-            }
-            return records[0];
-        }
-
-        public virtual GLib.SList<T> read_all () {
-            var list = new GLib.SList<T> ();
-            try {
-                T[] records = db.select (name, null);
-                foreach (var record in records) {
-                    list.append (record);
-                }
-            } catch (GLib.Error e) {
-                critical (e.message);
-            }
-            return list;
-        }
-
-        public virtual GLib.SList<T> read_num (int n, int offset) {
-            var list = new GLib.SList<T> ();
-            try {
-                T[] records = db.select (name, null, n, offset);
-                foreach (var record in records) {
-                    list.append (record);
-                }
-            } catch (GLib.Error e) {
-                critical (e.message);
-            }
-            return list;
-        }
-
-        public virtual void update (T object) {
-            try {
-                db.update (name, object);
-            } catch (GLib.Error e) {
-                critical (e.message);
-            }
-        }
-
-        public virtual void delete (int id) {
-            try {
-                var val_id = Value (typeof (int));
-                val_id.set_int (id);
-                db.delete (name, val_id);
-            } catch (GLib.Error e) {
-                critical (e.message);
-            }
-        }
-
-        /**
-         * Remove records where the given column has a given value
-         *
-         * @param column The name of the column
-         * @param value The value that matches
-         */
-        public virtual void remove (string column, string value) {
-            try {
-                db.delete_where (name, column, value);
-            } catch (GLib.Error e) {
-                critical (e.message);
-            }
-        }
-
-        public virtual void delete_all () {
-            try {
-                db.delete (name, null);
-            } catch (GLib.Error e) {
-                critical (e.message);
-            }
+    private void job_deleted_cb (string uuid) {
+        debug ("Signal delete Job in database");
+        try {
+            db.remove (uuid);
+        } catch (Ims.DatabaseError de) {
+            warning (de.message);
         }
     }
 
     /**
      * XXX This is currently just here to test overriding methods from base
      */
-    public class ImageRepository : Repository<Ims.Image?> {
-
-        public ImageRepository (Ims.Database db) {
-            base (db);
-            name = "images";
-        }
-    }
+/*
+ *    public class Ims.ImageRepository : Ims.Repository<Ims.Image?> {
+ *
+ *        public ImageRepository (Ims.Database db) {
+ *            base (db);
+ *            name = "images";
+ *        }
+ *    }
+ */
 }

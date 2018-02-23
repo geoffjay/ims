@@ -2,37 +2,41 @@ using VSGI;
 using Valum;
 using Valum.ContentNegotiation;
 
-public class Ims.ImageRouter : Ims.Router {
+public class Ims.PipelineRouter : Ims.Router {
 
     construct {
-        domain = "images";
-        path = "/images";
+        domain = "pipelines";
+        base_path = "/pipelines";
 
-        rule (Method.GET,
-              "/(<int:id>)?",
-              view_cb);
-        rule (Method.PUT,
-              "/<int:id>",
-              accept ("application/json", edit_cb));
-        rule (Method.POST,
-              "/",
-              accept ("application/json", create_cb));
-        rule (Method.DELETE,
-              "/(<int:id>)?",
-              delete_cb);
+        set_crud (create_cb, view_cb, edit_cb, delete_cb);
+
+        /*
+         *rule (Method.GET,
+         *      "/(<int:uuid>)?",
+         *      view_cb);
+         *rule (Method.PUT,
+         *      "/<int:uuid>",
+         *      accept ("application/json", edit_cb));
+         *rule (Method.POST,
+         *      "/",
+         *      accept ("application/json", create_cb));
+         *rule (Method.DELETE,
+         *      "/(<int:uuid>)?",
+         *      delete_cb);
+         */
     }
 
     private bool view_cb (Request req, Response res, NextCallback next, Context context)
                           throws GLib.Error {
-        var id = context["id"];
+        var uuid = context["uuid"];
 
         var generator = new Json.Generator ();
         generator.pretty = false;
 
-        if (id == null) {
-            var image_array = new Json.Array ();
+        if (uuid == null) {
+            var pipeline_array = new Json.Array ();
             var node = new Json.Node.alloc ();
-            node.init_array (image_array);
+            node.init_array (pipeline_array);
             generator.set_root (node);
         } else {
             var object = new Json.Object ();
@@ -46,9 +50,9 @@ public class Ims.ImageRouter : Ims.Router {
 
     private bool edit_cb (Request req, Response res, NextCallback next, Context context, string content_type)
                           throws GLib.Error {
-        var id = context["id"];
-        if (id == null) {
-            throw new ClientError.NOT_FOUND ("No image ID was provided");
+        var uuid = context["uuid"];
+        if (uuid == null) {
+            throw new ClientError.NOT_FOUND ("No pipeline UUID was provided");
         }
 
         switch (content_type) {
@@ -82,7 +86,11 @@ public class Ims.ImageRouter : Ims.Router {
                  *        "Invalid or malformed JSON was provided");
                  *}
                  */
-                break;
+
+                var model = Ims.Model.get_default ();
+                var uuid = model.pipelines.create ();
+                throw new Success.CREATED (
+                    "Created new pipeline with UUID: %s", uuid);
             default:
                 throw new ClientError.BAD_REQUEST (
                     "Request used incorrect content type, 'application/json' expected");
@@ -94,12 +102,12 @@ public class Ims.ImageRouter : Ims.Router {
     private bool delete_cb (Request req, Response res, NextCallback next, Context context)
                             throws GLib.Error{
         /*
-         *var id = context["id"];
+         *var uuid = context["uuid"];
          *var model = Ims.Model.get_default ();
-         *if (id != null) {
-         *    model.images.delete (int.parse (id.get_string ()));
+         *if (uuid != null) {
+         *    model.pipelines.delete (int.parse (uuid));
          *} else {
-         *    model.images.delete_all ();
+         *    model.pipelines.delete_all ();
          *}
          */
 
