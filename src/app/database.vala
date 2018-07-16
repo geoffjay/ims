@@ -127,7 +127,7 @@ public class Ims.Database : Object {
      * @throws Ims.DatabaseError
      */
     public void add (string uuid, Object document) throws Ims.DatabaseError {
-        bool result = client.store_object (StoreMode.ADD, uuid, document);
+        bool result = client.add_object (uuid, document);
         if (!result) {
             throw new Ims.DatabaseError.ADD (
                 "Failed to add object with key: %s", uuid
@@ -143,7 +143,7 @@ public class Ims.Database : Object {
      * @throws Ims.DatabaseError
      */
     public void @set (string uuid, Object document) throws Ims.DatabaseError {
-        bool result = client.store_object (StoreMode.SET, uuid, document);
+        bool result = client.set_object (uuid, document);
         if (!result) {
             throw new Ims.DatabaseError.SET (
                 "Failed to set object with key: %s", uuid
@@ -159,7 +159,7 @@ public class Ims.Database : Object {
      * @throws Ims.DatabaseError
      */
     public void replace (string uuid, Object document) throws Ims.DatabaseError {
-        bool result = client.store_object (StoreMode.REPLACE, uuid, document);
+        bool result = client.replace_object (uuid, document);
         if (!result) {
             throw new Ims.DatabaseError.REPLACE (
                 "Failed to replace object with key: %s", uuid

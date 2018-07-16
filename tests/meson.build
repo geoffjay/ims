@@ -8,4 +8,10 @@ if get_option('enable-tests')
   #  )
   #)
 
+  test('pipeline',
+    executable('pipeline-test', 'pipeline-test.vala',
+      dependencies: test_deps
+    )
+  )
+
 endif

@@ -1,4 +1,12 @@
+public enum Ims.ElementType {
+    MUX,
+    DEMUX,
+    FILTER
+}
+
 public class Ims.Element : GLib.Object {
+
+    public string uuid { get; set; }
 
     private GLib.HashTable<string, Variant> inputs;
 
@@ -15,6 +23,30 @@ public class Ims.Element : GLib.Object {
      * for plugins.
      */
     //public abstract void operation ();
+
+    /**
+     * Specifies whether the objects provided are equivalent for sorting.
+     *
+     * @param a one of the objects to use in the comparison.
+     * @param b the other object to use in the comparison.
+     *
+     * @return  ``true`` or ``false`` depending on whether or not the id
+     *          parameters match
+     */
+    public static bool equal (Ims.Element a, Ims.Element b) {
+        return a.uuid == b.uuid;
+    }
+
+    /**
+     * Compares the object to another that is provided.
+     *
+     * @param a the object to compare this one against.
+     *
+     * @return  ``0`` if they contain the same uuid, ``1`` otherwise
+     */
+    public int compare (Ims.Element a) {
+        return this.uuid.ascii_casecmp (a.uuid);
+    }
 
     /**
      * XXX Should these be exceptions instead of assertions? Adding these as

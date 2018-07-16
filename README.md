@@ -15,37 +15,23 @@ For now just manually installing dependencies that need tweaks.
 git clone https://github.com/geoffjay/valum.git
 cd valum
 # don't bother with the docs, valadoc doesn't have a 0.38 driver yet
-sed -i 's/subdir(\'docs\')//'
+sed -i 's/subdir(\'docs\')//' meson.build
 meson --prefix=/usr _build
 ninja -C _build
 sudo ninja -C _build install
 ```
 
-### Memcached
-
-Not sure if this will be used in the end.
-
-```sh
-sudo dnf install -y memcached libmemcached-devel
-sudo systemctl enable memcached
-sudo systemctl start memcached
-```
-
 ### Couchbase
 
 ```sh
-# XXX originally tried this:
-# sudo dnf install couchdb libcouchbase-devel
-# sudo systemctl enable couchdb
-# sudo systemctl start couchdb
-# XXX ran into limitations so switched to version outside of default fedora repos
+sudo dnf install -y libcouchbase-devel
 wget https://packages.couchbase.com/releases/5.0.1/couchbase-server-community-5.0.1-centos7.x86_64.rpm
-sudo dnf install couchbase-server-community-5.0.1-centos7.x86_64.rpm
+sudo dnf install -y couchbase-server-community-5.0.1-centos7.x86_64.rpm
 ```
 
 Follow the section at _Set up Couchbase Server_ at [Couchbase](Couchbase).
 
-* Go to `http://127.0.0.1:8091/ui/index.html`
+* Go [here](http://localhost:8091/ui/index.html)
 * Click _Setup New Cluster_
 * Enter "ims"
 * For password use "notagoodpassword" _or something better_
@@ -79,7 +65,7 @@ git clone https://github.com/geoffjay/gcouchbase.git
 cd gcouchbase
 mkdir build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr ..
+cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr -DLIB_INSTALL_DIR=lib64 ..
 make && sudo make install
 ```
 
